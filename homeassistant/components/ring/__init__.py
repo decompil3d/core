@@ -70,8 +70,12 @@ async def async_setup_entry(hass, entry):
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": ring,
         "devices": ring.devices(),
+        "groups": ring.groups(),
         "device_data": GlobalDataUpdater(
             hass, "device", entry.entry_id, ring, "update_devices", timedelta(minutes=1)
+        ),
+        "group_data": GlobalDataUpdater(
+            hass, "group", entry.entry_id, ring, "update_groups", timedelta(minutes=1)
         ),
         "dings_data": GlobalDataUpdater(
             hass,
@@ -111,6 +115,7 @@ async def async_setup_entry(hass, entry):
         """Refresh all ring data."""
         for info in hass.data[DOMAIN].values():
             await info["device_data"].async_refresh_all()
+            await info["group_data"].async_refresh_all()
             await info["dings_data"].async_refresh_all()
             await hass.async_add_executor_job(info["history_data"].refresh_all)
             await hass.async_add_executor_job(info["health_data"].refresh_all)
