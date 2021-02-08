@@ -18,23 +18,31 @@ async def test_setup(hass, requests_mock):
     await async_setup_component(hass, ring.DOMAIN, {})
 
     requests_mock.post(
-        "https://oauth.ring.com/oauth/token", text=load_fixture("ring_oauth.json")
+        "https://oauth.ring.com/oauth/token", text=load_fixture("ring/oauth.json")
     )
     requests_mock.post(
         "https://api.ring.com/clients_api/session",
-        text=load_fixture("ring_session.json"),
+        text=load_fixture("ring/session.json"),
     )
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",
-        text=load_fixture("ring_devices.json"),
+        text=load_fixture("ring/devices.json"),
+    )
+    requests_mock.get(
+        "https://api.ring.com/groups/v1/locations/mock-location-id/groups",
+        text=load_fixture("ring/groups.json"),
+    )
+    requests_mock.get(
+        "https://api.ring.com/groups/v1/locations/mock-location-id/groups/mock-group-id/devices",
+        text=load_fixture("ring/group_devices.json"),
     )
     requests_mock.get(
         "https://api.ring.com/clients_api/chimes/999999/health",
-        text=load_fixture("ring_chime_health_attrs.json"),
+        text=load_fixture("ring/chime_health_attrs.json"),
     )
     requests_mock.get(
         "https://api.ring.com/clients_api/doorbots/987652/health",
-        text=load_fixture("ring_doorboot_health_attrs.json"),
+        text=load_fixture("ring/doorboot_health_attrs.json"),
     )
 
     assert await ring.async_setup(hass, VALID_CONFIG)

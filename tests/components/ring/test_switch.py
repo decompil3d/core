@@ -44,7 +44,7 @@ async def test_siren_can_be_turned_on(hass, requests_mock):
     # Mocks the response for turning a siren on
     requests_mock.put(
         "https://api.ring.com/clients_api/doorbots/765432/siren_on",
-        text=load_fixture("ring_doorbot_siren_on_response.json"),
+        text=load_fixture("ring/doorbot_siren_on_response.json"),
     )
 
     state = hass.states.get("switch.front_siren")
@@ -67,7 +67,7 @@ async def test_updates_work(hass, requests_mock):
     # Changes the return to indicate that the siren is now on.
     requests_mock.get(
         "https://api.ring.com/clients_api/ring_devices",
-        text=load_fixture("ring_devices_updated.json"),
+        text=load_fixture("ring/devices_updated.json"),
     )
 
     await hass.services.async_call("ring", "update", {}, blocking=True)

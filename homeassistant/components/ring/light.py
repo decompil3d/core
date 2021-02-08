@@ -28,6 +28,7 @@ OFF_STATE = "off"
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Create the lights for the Ring devices."""
     devices = hass.data[DOMAIN][config_entry.entry_id]["devices"]
+    groups = hass.data[DOMAIN][config_entry.entry_id]["groups"]
 
     lights = []
 
@@ -35,18 +36,22 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if device.has_capability("light"):
             lights.append(RingLight(config_entry.entry_id, device))
 
+    for group in groups:
+        lights.append(RingLight(config_entry.entry_id, group, True))
+
     async_add_entities(lights)
 
 
 class RingLight(RingEntityMixin, LightEntity):
     """Creates a switch to turn the ring cameras light on and off."""
 
-    def __init__(self, config_entry_id, device):
+    def __init__(self, config_entry_id, device, is_group=False):
         """Initialize the light."""
-        super().__init__(config_entry_id, device)
+        super().__init__(config_entry_id, device, is_group)
         self._unique_id = device.id
-        self._light_on = device.lights == ON_STATE
+        self._update_light_state()
         self._no_updates_until = dt_util.utcnow()
+        self._is_group = is_group
 
     @callback
     def _update_callback(self):
@@ -54,13 +59,16 @@ class RingLight(RingEntityMixin, LightEntity):
         if self._no_updates_until > dt_util.utcnow():
             return
 
-        self._light_on = self._device.lights == ON_STATE
+        self._update_light_state()
         self.async_write_ha_state()
 
     @property
     def name(self):
         """Name of the light."""
-        return f"{self._device.name} light"
+        if self._is_group:
+            return self._device.name
+        else:
+            return f"{self._device.name} light"
 
     @property
     def unique_id(self):
@@ -72,10 +80,26 @@ class RingLight(RingEntityMixin, LightEntity):
         """If the switch is currently on or off."""
         return self._light_on
 
+    def _update_light_state(self):
+        """Update local state of lights."""
+        if self._is_group:
+            self._light_on = self._device.lights
+        else:
+            self._light_on = self._device.lights == ON_STATE
+
     def _set_light(self, new_state):
         """Update light state, and causes Home Assistant to correctly update."""
         try:
-            self._device.lights = new_state
+            if self._is_group:
+                if new_state == ON_STATE:
+                    self._device.lights = True
+                elif new_state == OFF_STATE:
+                    self._device.lights = False
+                else:
+                    _LOGGER.error("Invalid state %s passed to _set_light", new_state)
+                    return
+            else:
+                self._device.lights = new_state
         except requests.Timeout:
             _LOGGER.error("Time out setting %s light to %s", self.entity_id, new_state)
             return
