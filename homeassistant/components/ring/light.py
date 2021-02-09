@@ -60,7 +60,7 @@ class RingLight(RingEntityMixin, LightEntity):
 
         if self._is_group:
             await self.ring_objects["group_health_data"].async_track_device(
-                self._device, self._update_callback
+                self._device, self._health_update_callback
             )
 
     async def async_will_remove_from_hass(self):
@@ -69,11 +69,16 @@ class RingLight(RingEntityMixin, LightEntity):
 
         if self._is_group:
             self.ring_objects["group_health_data"].async_untrack_device(
-                self._device, self._update_callback
+                self._device, self._health_update_callback
             )
 
     @callback
-    def _update_callback(self, _data=None):
+    def _health_update_callback(self, _health_data):
+        """Call update method."""
+        self._update_callback()
+
+    @callback
+    def _update_callback(self):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
