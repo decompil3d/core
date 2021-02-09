@@ -36,7 +36,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if device.has_capability("light"):
             lights.append(RingLight(config_entry.entry_id, device))
 
-    for group in groups:
+    for group in groups.values():
         lights.append(RingLight(config_entry.entry_id, group, True))
 
     async_add_entities(lights)
@@ -49,12 +49,31 @@ class RingLight(RingEntityMixin, LightEntity):
         """Initialize the light."""
         super().__init__(config_entry_id, device, is_group)
         self._unique_id = device.id
+        self._light_on = False
         self._update_light_state()
         self._no_updates_until = dt_util.utcnow()
         self._is_group = is_group
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        await super().async_added_to_hass()
+
+        if self._is_group:
+            await self.ring_objects["group_health_data"].async_track_device(
+                self._device, self._update_callback
+            )
+
+    async def async_will_remove_from_hass(self):
+        """Disconnect callbacks."""
+        await super().async_will_remove_from_hass()
+
+        if self._is_group:
+            self.ring_objects["group_health_data"].async_untrack_device(
+                self._device, self._update_callback
+            )
+
     @callback
-    def _update_callback(self):
+    def _update_callback(self, _data=None):
         """Call update method."""
         if self._no_updates_until > dt_util.utcnow():
             return
@@ -67,8 +86,7 @@ class RingLight(RingEntityMixin, LightEntity):
         """Name of the light."""
         if self._is_group:
             return self._device.name
-        else:
-            return f"{self._device.name} light"
+        return f"{self._device.name} light"
 
     @property
     def unique_id(self):

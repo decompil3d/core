@@ -67,6 +67,8 @@ async def async_setup_entry(hass, entry):
         _LOGGER.error("Access token is no longer valid. Please set up Ring again")
         return False
 
+    ring.update_data()
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": ring,
         "devices": ring.devices(),
@@ -101,6 +103,14 @@ async def async_setup_entry(hass, entry):
             lambda device: device.update_health_data(),
             timedelta(minutes=1),
         ),
+        "group_health_data": DeviceDataUpdater(
+            hass,
+            "group health",
+            entry.entry_id,
+            ring,
+            lambda group: group.update(),
+            timedelta(minutes=1),
+        ),
     }
 
     for component in PLATFORMS:
@@ -119,6 +129,7 @@ async def async_setup_entry(hass, entry):
             await info["dings_data"].async_refresh_all()
             await hass.async_add_executor_job(info["history_data"].refresh_all)
             await hass.async_add_executor_job(info["health_data"].refresh_all)
+            await hass.async_add_executor_job(info["group_health_data"].refresh_all)
 
     # register service
     hass.services.async_register(DOMAIN, "update", async_refresh_all)

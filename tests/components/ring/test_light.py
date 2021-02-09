@@ -70,7 +70,7 @@ async def test_light_can_be_turned_on(hass, requests_mock):
     assert state.state == "on"
 
 
-async def test_light_group_can_be_turned_on(hass, requests_mock):
+async def test_light_group_can_be_turned_on_and_off(hass, requests_mock):
     """Tests the light turns on correctly for a group."""
     await setup_platform(hass, LIGHT_DOMAIN)
 
@@ -90,6 +90,14 @@ async def test_light_group_can_be_turned_on(hass, requests_mock):
 
     state = hass.states.get("light.landscape")
     assert state.state == "on"
+
+    await hass.services.async_call(
+        "light", "turn_off", {"entity_id": "light.landscape"}, blocking=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.landscape")
+    assert state.state == "off"
 
 
 async def test_updates_work(hass, requests_mock):
@@ -114,7 +122,7 @@ async def test_updates_work(hass, requests_mock):
 async def test_group_updates_work(hass, requests_mock):
     """Tests the update service works correctly."""
     await setup_platform(hass, LIGHT_DOMAIN)
-    state = hass.states.get("light.lanscape")
+    state = hass.states.get("light.landscape")
     assert state.state == "off"
     # Changes the return to indicate that the light is now on.
     requests_mock.get(
