@@ -1,7 +1,8 @@
 """Support for VOC."""
 from homeassistant.components.binary_sensor import DEVICE_CLASSES, BinarySensorEntity
 
-from . import DATA_KEY, VolvoEntity
+from . import VolvoEntity
+from .const import DATA_KEY
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

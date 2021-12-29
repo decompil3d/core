@@ -1,7 +1,8 @@
 """Support for Volvo On Call locks."""
 from homeassistant.components.lock import LockEntity
 
-from . import DATA_KEY, VolvoEntity
+from . import VolvoEntity
+from .const import DATA_KEY
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):

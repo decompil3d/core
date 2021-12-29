@@ -1,7 +1,8 @@
 """Support for Volvo On Call sensors."""
 from homeassistant.components.sensor import SensorEntity
 
-from . import DATA_KEY, VolvoEntity
+from . import VolvoEntity
+from .const import DATA_KEY
 
 
 async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
